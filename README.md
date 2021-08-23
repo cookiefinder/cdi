@@ -55,7 +55,7 @@
          FushengContainer container = FushengContainer.startup();
          A a = container.getBean(A.class);
          B b = container.getBean(B.class);
-         asset a.getB() == b
+         assert a.getB() == b
      }
      ```
 
@@ -65,7 +65,7 @@
 
      例：
 
-     Given 一个类 `com.tw.model.A1`，一个类 `com.tw.model.A2`
+     Given 一个类 `com.tw.model.A1`，一个类 `com.tw.model.A2`，都实现了A接口
 
      When 通过 `@Named` 分别指定类别名为 `A1`, `A2` 并启动程序
 
@@ -86,10 +86,12 @@
      }
      ```
 
+     
+
      ```java
      void test() {
      	FushengContainer container = FushengContainer.startup();
          A a = container.getBean(A.class, "A1");
-         asset a.getType() == A1.class    
+         assert a.getType() == A1.class    
      }
      ```
