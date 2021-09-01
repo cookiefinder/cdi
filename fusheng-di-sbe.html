@@ -5,87 +5,88 @@
 </head>
 <body>
 <b>What's DI</b>
-<p>DI 意为依赖注入，由系统或编辑器自动注入实现类，开发者只需声明所需接口便可使用，这种从以前开发者手动new实例转变为框架自动注入实现称为反转控制，而DI则是一个更加表义的名称，可以理解为一种设计模式，将我们这种自动注入功能标准化</p>
+<p>DI意为依赖注入，由系统或编辑器插件自动注入实现类，开发者只需通过类名便可容器中获取对应实例进行使用，并且该实例的依赖实例也被自动注入，这种从开发者手动new实例转变为通过容器获取，由框架自动注入的行为称为反转控制，而DI则是一个更加表义的名称，可以理解为一种设计模式，将我们这种自动注入功能标准化</p>
 <b>What's FushengDI</b>
 <p>FushengDI是基于DI模式实现的一个DI框架，支持通过构造器进行依赖的注入，轻量易用</p>
 <b>How to import FushengDI</b>
 <p>只需在项目引入 com.tw.fushengdi-core 便可使用</p>
 <b>FushengContainer Overview</b>
 <p class="example">
-    程序会以入口类所在路径依次扫描，将所有类进行初始化并注入FushengContainer，我们可通过FushengContainer获取相应的实例<br>
+    程序会以入口类所在路径依次向下扫描，将所扫描到的类信息记录到FushengContainer中，开发者可通过类名从FushengContainer获取相应的实例。<br>
     例: 给定一个入口类
     <span class="variable" data-name="primarySource">com.tw.Main</span>，
-    一个测试类com.tw.test.Test
+    一个测试类com.tw.test.Test，
     当<span class="function" data-action="startup" data-params="primarySource">启动程序</span>后，
-    可通过FushengContainer获取
-    <span class="assertion" data-expect="true" data-action="getComponent" data-params="Test.class">Test实例</span>，
-    且实例个数为<span class="assertion" data-expect="equals" data-action="getComponentSize" data-params="Test.class">1</span>
+    通过<span class="variable" data-name="className">Test.class</span>
+    从FushengContainer获取到的
+    Test实例个数为<span class="assertion" data-expect="equals" data-action="getComponentSize" data-params="className">1</span>
 </p>
 <b>Constructor-Based DI</b>
 <p class="example">
-    针对有依赖的类，可通过构造器组合依赖，并在构造器上指定@Inject，此时该类依赖会在获取时自动注入。<br>
+    针对有依赖的类，可使用构造器引入依赖，并在构造器上标记@Inject注解，该依赖将会由容器自动注入。<br>
     例: 给定一个入口类
     <span class="variable" data-name="primarySource">com.tw.Main</span>，
-    一个类com.tw.model.A，类com.tw.model.B，A通过构造器依赖B
-    当在构造器上标明@Inject并<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
-    可通过FushengContainer获取到的A实例中B实例是
-    <span class="assertion" data-expect="true" data-action="checkDependencyExist" data-params="A.class">存在</span>的
+    一个类com.tw.model.A，一个类com.tw.model.B，A通过构造器依赖B并在构造器上标明@Inject注解，
+    然后<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
+    通过<span class="variable" data-name="className">A.class</span>
+    从FushengContainer获取到的A实例中的B实例是
+    <span class="assertion" data-expect="true" data-action="checkDependencyExist" data-params="className">存在</span>的
 </p>
 <p class="example">
-    @Inject注解只能标记在构造器上，当标记在其他地方时，不会自动注入指定依赖<br>
+    @Inject注解只能标记在构造器上，当标记在其他地方时，不会将依赖自动注入<br>
     例: 给定一个入口类
     <span class="variable" data-name="primarySource">com.tw.Main</span>，
-    一个类com.tw.model.A，类com.tw.model.B，A通过构造器依赖B
-    当在B字段上标明@Inject并<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
-    可通过FushengContainer获取到的A实例中B实例为
-    <span class="assertion" data-expect="false" data-action="checkDependencyExist" data-params="A.class">不存在</span>
+    一个类com.tw.model.A，一个类com.tw.model.B，A通过构造器依赖B，但是我们将@Inject注解标记在B字段上，
+    然后<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
+    通过<span class="variable" data-name="className">A.class</span>
+    从FushengContainer获取到的A实例中的B实例是
+    <span class="assertion" data-expect="false" data-action="checkDependencyExist" data-params="className">不存在</span>的
 </p>
 <b>FushengDI startup</b>
 <p class="example">
     容器在启动过程中若识别循环依赖则直接抛出异常<br>
     例: 给定一个入口类
     <span class="variable" data-name="primarySource">com.tw.Main</span>，
-    一个类com.tw.model.A，类com.tw.model.B，A通过构造器依赖B，B也通过构造器依赖A
-    当在A类构造器和B类构造器上同时标明@Inject并启动程序，
-    此时程序会抛出异常提示
+    一个类com.tw.model.A，一个类com.tw.model.B，A通过构造器依赖B，B也通过构造器依赖A，
+    并且A构造器和B构造器上同时标明@Inject注解，然后启动程序，此时程序会抛出异常并提示
     <span class="assertion" data-expect="equals" data-action="startup" data-params="primarySource">循环依赖</span>
 </p>
 <p class="example">
-    当一个依赖的接口对应多个实现类时，我们通过从容器中获取对应的类会抛出异常，因为此时容器并不知道应注入该依赖的哪个实现类<br>
+    当一个类的依赖对应多个实现类时，我们从容器中获取该类时会抛出异常，因为此时容器并不知道应注入依赖的哪一个实现类<br>
     例: 给定一个入口类
     <span class="variable" data-name="primarySource">com.tw.Main</span>，
-    一个类com.tw.model.A，接口com.tw.model.B，A通过构造器依赖B，B有两个实现类分别为com.tw.model.SubB，com.tw.model.AnotherSubB
-    当在A构造器上标明@Inject并<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
-    然后通过FushengContainer获取的A实例时抛出异常信息
-    <span class="assertion" data-expect="equals" data-action="getComponent" data-params="A.class">B类对应多个实现，请在注入口通过@Named指定需注入的依赖</span>
+    一个类com.tw.model.A，一个接口com.tw.model.B，A通过构造器依赖B，B有两个实现类分别为com.tw.model.SubB，com.tw.model.AnotherSubB，
+    当在A构造器上标明@Inject注解并<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
+    然后通过<span class="variable" data-name="className">A.class</span>
+    从FushengContainer获取的A实例时抛出异常信息
+    <span class="assertion" data-expect="equals" data-action="getComponent" data-params="className">该类依赖存在多个实现，无法注入</span>
 </p>
 <b>Specify dependency alias</b>
 <p class="example">
-    当一个接口对应多个实现类时我们可通过@Named注解标记类实例在容器中的别名，可通过@Named在构造器上标记并指定别名获取指定类型的类实例，防止在注入时不确认需注入的实例<br>
+    当一个依赖对应多个实现类时我们可通过@Named注解标记实现类在容器中的别名，然后在类构造器上使用@Named注解标记并指定别名获取依赖相应的实现类<br>
     例: 给定一个入口类
     <span class="variable" data-name="primarySource">com.tw.Main</span>，
-    一个类com.tw.model.A，接口com.tw.model.B，A通过构造器依赖B，B有两个实现类分别为com.tw.model.SubB，com.tw.model.AnotherSubB
-    当通过@Named指定SubB类别名为b1, AnotherSubB别名为b2并在构造器上指定@Named("b1")，
+    一个类com.tw.model.A，一个接口com.tw.model.B，A通过构造器依赖B，B有两个实现类分别为com.tw.model.SubB，com.tw.model.AnotherSubB，
+    使用@Named注解标记SubB类别名为b1, AnotherSubB类别名为b2，并在A构造器上指定@Named("b1")，
     然后<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
-    可通过FushengContainer获取的A实例以及B实例，
-    此时返回的B实例数量为
-    <span class="assertion" data-expect="equals" data-action="getComponentSize" data-params="B.class">2</span>，
-    我们通过<span class="variable" data-name="alias1">b1</span>从中获取对应的实例，
-    其<span class="assertion" data-expect="equals" data-action="checkContainerInstance" data-params="A.class, alias1">等同于</span>
-    通过A实例获取到的B实例
+    可通过<span class="variable" data-name="className">A.class</span>
+    从FushengContainer获取的A实例中的B实例是
+    <span class="assertion" data-expect="equals" data-action="getDependency" data-params="className">com.tw.model.SubB</span>
 </p>
 <b>Dependency Scope</b>
 <p class="example">
-    开发者可通过container实例的getComponent方法获取到所需实例，默认每次获取到的实例都是一个新建的实例对象，可通过@Singleton注解标记类在容器中的实例个数只能有一个，仅作用于类上，这样每次获取到的实例都是同一个<br>
+    默认情况下开发者从容器中每次获取到的实例都是一个新的实例对象，如果希望每次获取到的都是同一个对象，我们可在类上标记@Singleton注解，这样该类的实例对象在容器中只有一个<br>
     例: 给定一个入口类
     <span class="variable" data-name="primarySource">com.tw.Main</span>，
-    一个类com.tw.model.A，类com.tw.model.B
-    在类B上使用标记@Singleton，
+    一个类com.tw.model.A，一个类com.tw.model.B，
+    我们在类B上标记@Singleton注解，
     然后<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
-    可通过FushengContainer连续两次获取的A实例以及B实例，
-    此时容器中存在的B实例个数为
-    <span class="assertion" data-expect="equals" data-action="getContainerSize" data-params="B.class">1</span>，
-    A实例个数为<span class="assertion" data-expect="equals" data-action="getContainerSize" data-params="A.class">2</span>
+    通过<span class="variable" data-name="className">A.class</span>
+    从FushengContainer获取的A实例是
+    <span class="assertion" data-expect="equals" data-action="checkInstanceIsSame" data-params="className">不一样</span>的，
+    通过<span class="variable" data-name="anotherClassName">B.class</span>
+    从FushengContainer获取的B实例是
+    <span class="assertion" data-expect="equals" data-action="checkInstanceIsSame" data-params="anotherClassName">一样</span>的。
 </p>
 </body>
 </html>
