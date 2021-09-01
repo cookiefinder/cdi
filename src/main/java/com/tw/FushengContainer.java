@@ -1,4 +1,4 @@
-package com.tw.fushengdicore;
+package com.tw;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -13,10 +13,10 @@ import org.reflections.scanners.SubTypesScanner;
 
 public class FushengContainer {
 
-    private final Set<Class<?>> classMeta;
+    private final Set<Class<?>> data;
 
-    public FushengContainer(Set<Class<?>> classMeta) {
-        this.classMeta = classMeta;
+    public FushengContainer(Set<Class<?>> data) {
+        this.data = data;
     }
 
     public static FushengContainer startup(Class<?> primarySource) {
@@ -28,7 +28,7 @@ public class FushengContainer {
 
     @SuppressWarnings("unchecked")
     public <T> List<T> getComponent(Class<T> clazz) {
-        if (classMeta.contains(clazz)) {
+        if (data.contains(clazz)) {
             Constructor<T>[] constructors = (Constructor<T>[]) clazz.getConstructors();
             return Arrays.stream(constructors)
                     .filter(constructorPredicate())
