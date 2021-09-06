@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<p class="example">
+    程序会以入口类所在路径依次向下扫描，将所扫描到的类信息记录到FushengContainer中，开发者可通过类名从FushengContainer获取相应的实例。<br>
+    例: 给定一个入口类
+    <span class="variable" data-name="primarySource">com.tw.fixture.model.Main</span>，
+    一个测试类<span class="variable" data-name="className">com.tw.fixture.model.test.Test</span>，
+    当<span class="function" data-action="startup" data-params="primarySource">启动程序</span>后，
+    从FushengContainer获取到的
+    Test实例个数为<span class="assertion" data-expect="equal" data-action="getComponentSize" data-params="className">1</span>
+</p>
+</body>
+</html>
