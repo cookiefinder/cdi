@@ -14,5 +14,16 @@
     从FushengContainer获取到的
     Test实例个数为<span class="assertion" data-expect="equal" data-action="getComponentSize" data-params="className">1</span>
 </p>
+<p class="example">
+    容器在启动过程中若识别循环依赖则直接抛出异常<br>
+    例: 给定一个入口类
+    <span class="variable" data-name="primarySource">com.tw.fixture.model.Main</span>，
+    一个类<span class="variable" data-name="className">com.tw.fixture.model.test.A</span>，
+    一个类com.tw.fixture.model.test.B，A通过构造器依赖B，B也通过构造器依赖A，
+    并且A构造器和B构造器上同时标明@Inject注解，然后
+    <span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
+    若此时从FushengContainer中获取A实例程序会抛出异常并提示
+    <span class="assertion" data-expect="equal" data-action="getComponent" data-params="className">循环依赖</span>
+</p>
 </body>
 </html>

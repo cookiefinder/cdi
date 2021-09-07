@@ -1,7 +1,9 @@
 package com.tw;
 
+import com.tw.exception.ContainerStartupException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -29,26 +31,30 @@ public class FushengContainer {
 
     public <T> List<T> getComponent(Class<T> clazz) {
         if (data.contains(clazz)) {
-            return Collections.singletonList(getInstance(clazz));
+            return Collections.singletonList(getInstance(clazz, new ArrayList<>()));
         }
-        throw new RuntimeException("Not found class with " + clazz.getName());
+        throw new ContainerStartupException("Not found class with " + clazz.getName());
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> T getInstance(Class<T> clazz) {
-        Constructor<T>[] constructors = (Constructor<T>[]) clazz.getConstructors();
-        T instanceByInjectAnnotation = createInstance(constructors, constructorWithInjectAnnotationPredicate());
+    private <T> T getInstance(Class<T> clazz, List<Class<?>> registerClasses) {
+        if (registerClasses.contains(clazz)) {
+            throw new ContainerStartupException("循环依赖");
+        }
+        T instanceByInjectAnnotation = createInstance(clazz, registerClasses, constructorWithInjectAnnotationPredicate());
         if (Objects.nonNull(instanceByInjectAnnotation)) {
             return instanceByInjectAnnotation;
         }
-        T instanceByNoArgs = createInstance(constructors, noArgsConstructorPredicate());
+        T instanceByNoArgs = createInstance(clazz, registerClasses, noArgsConstructorPredicate());
         if (Objects.nonNull(instanceByNoArgs)) {
             return instanceByNoArgs;
         }
-        throw new RuntimeException("Class should specify no args constructor or mark inject annotation");
+        throw new ContainerStartupException("Class should specify no args constructor or mark inject annotation");
     }
 
-    private <T> T createInstance(Constructor<T>[] constructors, Predicate<Constructor<?>> predicate) {
+    @SuppressWarnings("unchecked")
+    private <T> T createInstance(Class<T> clazz, List<Class<?>> registerClasses, Predicate<Constructor<?>> predicate) {
+        registerClasses.add(clazz);
+        Constructor<T>[] constructors = (Constructor<T>[]) clazz.getConstructors();
         return Arrays.stream(constructors)
                 .filter(predicate)
                 .map(constructor -> {
@@ -58,7 +64,7 @@ public class FushengContainer {
                                 return constructor.newInstance();
                             }
                             return constructor.newInstance(Arrays.stream(constructor.getParameterTypes())
-                                    .map(this::getInstance).toArray());
+                                    .map(type -> getInstance(type, registerClasses)).toArray());
                         }
                         return constructor.newInstance();
                     } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
