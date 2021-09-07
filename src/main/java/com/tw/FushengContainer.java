@@ -3,11 +3,12 @@ package com.tw;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 
@@ -26,26 +27,52 @@ public class FushengContainer {
         return new FushengContainer(allClasses);
     }
 
-    @SuppressWarnings("unchecked")
     public <T> List<T> getComponent(Class<T> clazz) {
         if (data.contains(clazz)) {
-            Constructor<T>[] constructors = (Constructor<T>[]) clazz.getConstructors();
-            return Arrays.stream(constructors)
-                    .filter(constructorPredicate())
-                    .map(constructor -> {
-                        try {
-                            return constructor.newInstance();
-                        } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                            e.printStackTrace();
-                            return null;
-                        }
-                    })
-                    .collect(Collectors.toList());
+            return Collections.singletonList(getInstance(clazz));
         }
         throw new RuntimeException("Not found class with " + clazz.getName());
     }
 
-    private Predicate<Constructor<?>> constructorPredicate() {
+    @SuppressWarnings("unchecked")
+    private <T> T getInstance(Class<T> clazz) {
+        Constructor<T>[] constructors = (Constructor<T>[]) clazz.getConstructors();
+        T instanceByInjectAnnotation = createInstance(constructors, constructorWithInjectAnnotationPredicate());
+        if (Objects.nonNull(instanceByInjectAnnotation)) {
+            return instanceByInjectAnnotation;
+        }
+        T instanceByNoArgs = createInstance(constructors, noArgsConstructorPredicate());
+        if (Objects.nonNull(instanceByNoArgs)) {
+            return instanceByNoArgs;
+        }
+        throw new RuntimeException("Class should specify no args constructor or mark inject annotation");
+    }
+
+    private <T> T createInstance(Constructor<T>[] constructors, Predicate<Constructor<?>> predicate) {
+        return Arrays.stream(constructors)
+                .filter(predicate)
+                .map(constructor -> {
+                    try {
+                        if (Objects.nonNull(constructor.getAnnotation(Inject.class))) {
+                            if (Objects.equals(constructor.getParameterCount(), 0)) {
+                                return constructor.newInstance();
+                            }
+                            return constructor.newInstance(Arrays.stream(constructor.getParameterTypes())
+                                    .map(this::getInstance).toArray());
+                        }
+                        return constructor.newInstance();
+                    } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                }).findFirst().orElse(null);
+    }
+
+    private Predicate<Constructor<?>> constructorWithInjectAnnotationPredicate() {
+        return constructor -> Objects.nonNull(constructor.getAnnotation(Inject.class));
+    }
+
+    private Predicate<Constructor<?>> noArgsConstructorPredicate() {
         return constructor -> Objects.equals(constructor.getParameterCount(), 0);
     }
 }

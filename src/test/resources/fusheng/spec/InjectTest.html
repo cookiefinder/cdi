@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<p class="example">
+    针对有依赖的类，可使用构造器引入依赖，并在构造器上标记@Inject注解，该依赖将会由容器自动注入。<br>
+    例: 给定一个入口类
+    <span class="variable" data-name="primarySource">com.tw.fixture.model.Main</span>，
+    一个类<span class="variable" data-name="computerClassName">com.tw.fixture.model.test.Computer</span>
+    通过构造器依赖另一个类com.tw.fixture.model.test.Console，
+    并在构造器上标明@Inject注解，
+    当我们调用Computer的print方法其实调用的是Console的print方法，
+    然后<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
+    调用Computer的print方法，返回结果为
+    <span class="assertion" data-expect="equal" data-action="print" data-params="computerClassName">Hello Fusheng</span>
+</p>
+</body>
+</html>
