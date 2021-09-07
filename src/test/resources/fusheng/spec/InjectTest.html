@@ -17,5 +17,17 @@
     调用Computer的print方法，返回结果为
     <span class="assertion" data-expect="equal" data-action="print" data-params="computerClassName">Hello Fusheng</span>
 </p>
+<p class="example">
+    @Inject注解只能标记在构造器上，当标记在其他地方时，不会将依赖自动注入<br>
+    例: 给定一个入口类
+    <span class="variable" data-name="primarySource">com.tw.fixture.model.Main</span>，
+    一个类<span class="variable" data-name="computerClassName">com.tw.fixture.model.test.Computer</span>
+    通过构造器依赖另一个类com.tw.fixture.model.test.Keyboard，
+    但是我们将@Inject注解标记在keyboard字段上，
+    然后<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
+    从FushengContainer获取到的
+    <span class="function" data-action="checkDependencyExist" data-params="computerClassName" data-return="exist">Computer实例中的Keyboard实例</span>是
+    <span class="assertion" data-actual="exist" data-expect="false">不存在</span>的
+</p>
 </body>
 </html>
