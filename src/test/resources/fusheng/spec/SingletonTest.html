@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<p class="example">
+    默认情况下开发者从容器中每次获取到的实例都是一个新的实例对象，如果希望每次获取到的都是同一个对象，我们可在类上标记@Singleton注解，这样该类的实例对象在容器中只有一个<br>
+    例: 给定一个入口类
+    <span class="variable" data-name="primarySource">com.tw.fixture.model.Main</span>，
+    一个类<span class="variable" data-name="className">com.tw.fixture.model.test.Computer</span>，
+    一个类<span class="variable" data-name="anotherClassName">com.tw.fixture.model.test.Mouse</span>，
+    我们在类Mouse上标记@Singleton注解，
+    然后<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
+    从FushengContainer获取
+    <span class="function" data-action="getInstance" data-params="className" data-return="computer1">Computer实例</span>和
+    <span class="function" data-action="getInstance" data-params="anotherClassName" data-return="mouse1">Mouse实例</span>，
+    再从FushengContainer获取
+    <span class="function" data-action="getInstance" data-params="className" data-return="computer2">Computer实例</span>和
+    <span class="function" data-action="getInstance" data-params="anotherClassName" data-return="mouse2">Mouse实例</span>，
+    我们两次获取到的computer实例是
+    <span class="assertion" data-expect="false" data-actual="computer1 == computer2">不一样</span>的，
+    获取的Mouse实例是
+    <span class="assertion" data-expect="true" data-actual="mouse1 == mouse2">一样</span>的。
+</p>
+</body>
+</html>

@@ -6,13 +6,16 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 
@@ -22,6 +25,7 @@ import static com.tw.exception.BusinessExceptionCode.CIRCULAR_REFERENCE;
 public class FushengContainer {
 
     private final Set<Class<?>> data;
+    private final Map<Class<?>, Object> container = new HashMap<>();
 
     public FushengContainer(Set<Class<?>> data) {
         this.data = data;
@@ -40,6 +44,9 @@ public class FushengContainer {
 
     @SuppressWarnings("unchecked")
     public <T> List<T> getComponent(Class<T> clazz, List<Class<?>> registerClasses) {
+        if (container.containsKey(clazz) && Objects.nonNull(clazz.getAnnotation(Singleton.class))) {
+            return (List<T>) Collections.singletonList(container.get(clazz));
+        }
         if (data.contains(clazz)) {
             if (clazz.isInterface()) {
                 List<Class<T>> implementationClass = new ArrayList<>();
@@ -51,11 +58,15 @@ public class FushengContainer {
                 if (implementationClass.size() < 1) {
                     throw new ContainerStartupException("Not found class with " + clazz.getName());
                 }
-                return implementationClass.stream()
+                List<T> components = implementationClass.stream()
                         .map(value -> getInstance(value, registerClasses))
                         .collect(Collectors.toList());
+                components.forEach(component -> container.put(component.getClass(), component));
+                return components;
             }
-            return Collections.singletonList(getInstance(clazz, registerClasses));
+            T instance = getInstance(clazz, registerClasses);
+            container.put(instance.getClass(), instance);
+            return Collections.singletonList(instance);
         }
         throw new ContainerStartupException("Not found class with " + clazz.getName());
     }
