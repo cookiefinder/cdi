@@ -10,9 +10,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
+
+import static com.tw.exception.BusinessExceptionCode.AMBIGUOUS_IMPLEMENTATION_CLASS;
+import static com.tw.exception.BusinessExceptionCode.CIRCULAR_REFERENCE;
 
 public class FushengContainer {
 
@@ -30,15 +34,34 @@ public class FushengContainer {
     }
 
     public <T> List<T> getComponent(Class<T> clazz) {
+        return getComponent(clazz, new ArrayList<>());
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> List<T> getComponent(Class<T> clazz, List<Class<?>> registerClasses) {
         if (data.contains(clazz)) {
-            return Collections.singletonList(getInstance(clazz, new ArrayList<>()));
+            if (clazz.isInterface()) {
+                List<Class<T>> implementationClass = new ArrayList<>();
+                for (Class<?> value : data) {
+                    if (clazz.isAssignableFrom(value) && !Objects.equals(value, clazz)) {
+                        implementationClass.add((Class<T>) value);
+                    }
+                }
+                if (implementationClass.size() < 1) {
+                    throw new ContainerStartupException("Not found class with " + clazz.getName());
+                }
+                return implementationClass.stream()
+                        .map(value -> getInstance(value, registerClasses))
+                        .collect(Collectors.toList());
+            }
+            return Collections.singletonList(getInstance(clazz, registerClasses));
         }
         throw new ContainerStartupException("Not found class with " + clazz.getName());
     }
 
     private <T> T getInstance(Class<T> clazz, List<Class<?>> registerClasses) {
         if (registerClasses.contains(clazz)) {
-            throw new ContainerStartupException("循环依赖");
+            throw new ContainerStartupException(CIRCULAR_REFERENCE);
         }
         T instanceByInjectAnnotation = createInstance(clazz, registerClasses, constructorWithInjectAnnotationPredicate());
         if (Objects.nonNull(instanceByInjectAnnotation)) {
@@ -64,7 +87,16 @@ public class FushengContainer {
                                 return constructor.newInstance();
                             }
                             return constructor.newInstance(Arrays.stream(constructor.getParameterTypes())
-                                    .map(type -> getInstance(type, registerClasses)).toArray());
+                                    .map(type -> {
+                                        List<?> components = getComponent(type, registerClasses);
+                                        if (Objects.equals(components.size(), 1)) {
+                                            return components.get(0);
+                                        }
+                                        if (components.size() < 1) {
+                                            throw new ContainerStartupException("Not found class with " + type.getName());
+                                        }
+                                        throw new ContainerStartupException(AMBIGUOUS_IMPLEMENTATION_CLASS);
+                                    }).toArray());
                         }
                         return constructor.newInstance();
                     } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {

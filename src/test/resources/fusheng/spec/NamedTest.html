@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<p class="example">
+    当一个类的依赖对应多个实现类时，我们从容器中获取该类时会抛出异常，因为此时容器并不知道应注入依赖的哪一个实现类<br>
+    例: 给定一个入口类
+    <span class="variable" data-name="primarySource">com.tw.fixture.model.Main</span>，
+    一个类<span class="variable" data-name="className">com.tw.fixture.model.test.Host</span>，
+    一个接口com.tw.fixture.model.test.Screen，Host通过构造器依赖Screen，Screen有两个实现类分别为
+    com.tw.fixture.model.test.HDScreen，com.tw.fixture.model.test.SDScreen，
+    当在Host构造器上标明@Inject注解并<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
+    然后从FushengContainer获取的Host实例时抛出异常信息
+    <span class="assertion" data-expect="equal" data-action="getComponent" data-params="className">该类依赖存在多个实现，无法注入</span>
+</p>
+</body>
+</html>
