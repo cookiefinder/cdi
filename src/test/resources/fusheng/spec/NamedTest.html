@@ -16,5 +16,17 @@
     然后从FushengContainer获取的Host实例时抛出异常信息
     <span class="assertion" data-expect="equal" data-action="getComponent" data-params="className">该类依赖存在多个实现，无法注入</span>
 </p>
+<p class="example">
+    当一个依赖对应多个实现类时我们可通过@Named注解标记实现类在容器中的别名，然后在类构造器上使用@Named注解标记并指定别名获取依赖相应的实现类<br>
+    例: 给定一个入口类
+    <span class="variable" data-name="primarySource">com.tw.fixture.model.Main</span>，
+    一个类<span class="variable" data-name="className">com.tw.fixture.model.test.Car</span>，
+    一个接口com.tw.fixture.model.test.Tire，Car通过构造器依赖Tire，
+    Tire有两个实现类分别为com.tw.fixture.model.test.MichelinTire，com.tw.fixture.model.test.NormalTire，
+    使用@Named注解标记MichelinTire类别名为michelin, NormalTire类别名为normal，并在A构造器上指定@Named("michelin")，
+    然后<span class="function" data-action="startup" data-params="primarySource">启动程序</span>，
+    可从FushengContainer获取的Car实例中的Tire实例是
+    <span class="assertion" data-expect="equal" data-action="getDependencyClass" data-params="className">com.tw.fixture.model.test.MichelinTire</span>
+</p>
 </body>
 </html>

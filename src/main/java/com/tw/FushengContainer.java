@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.inject.Named;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 
@@ -94,6 +95,14 @@ public class FushengContainer {
                                         }
                                         if (components.size() < 1) {
                                             throw new ContainerStartupException("Not found class with " + type.getName());
+                                        }
+                                        Named namedAnnotation = constructor.getAnnotation(Named.class);
+                                        if (Objects.nonNull(namedAnnotation)) {
+                                            String value = namedAnnotation.value();
+                                            return components.stream().filter(component -> {
+                                                Named componentNamedAnnotation = component.getClass().getAnnotation(Named.class);
+                                                return Objects.nonNull(componentNamedAnnotation) && Objects.equals(componentNamedAnnotation.value(), value);
+                                            }).findFirst().orElseThrow(() -> new ContainerStartupException(AMBIGUOUS_IMPLEMENTATION_CLASS));
                                         }
                                         throw new ContainerStartupException(AMBIGUOUS_IMPLEMENTATION_CLASS);
                                     }).toArray());
