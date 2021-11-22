@@ -17,10 +17,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
 
 import static com.tw.exception.BusinessExceptionCode.AMBIGUOUS_IMPLEMENTATION_CLASS;
 import static com.tw.exception.BusinessExceptionCode.CIRCULAR_REFERENCE;
+import static org.reflections.scanners.Scanners.SubTypes;
 
 public class FushengContainer {
 
@@ -33,7 +33,7 @@ public class FushengContainer {
 
     public static FushengContainer startup(Class<?> primarySource) {
         String packageName = primarySource.getPackage().getName();
-        Reflections reflections = new Reflections(packageName, new SubTypesScanner(false));
+        Reflections reflections = new Reflections(packageName, SubTypes.filterResultsBy(c -> true));
         Set<Class<?>> allClasses = reflections.getSubTypesOf(Object.class);
         return new FushengContainer(allClasses);
     }
