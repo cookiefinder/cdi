@@ -43,7 +43,7 @@ public class FushengContainer {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> List<T> getComponent(Class<T> clazz, List<Class<?>> registerClasses) {
+    public <T> List<T> getComponent(Class<T> clazz, List<Class<?>> scannedClasses) {
         if (container.containsKey(clazz) && Objects.nonNull(clazz.getAnnotation(Singleton.class))) {
             return (List<T>) Collections.singletonList(container.get(clazz));
         }
@@ -58,28 +58,30 @@ public class FushengContainer {
                 if (implementationClass.size() < 1) {
                     throw new ContainerStartupException("Not found class with " + clazz.getName());
                 }
-                List<T> components = implementationClass.stream()
-                        .map(value -> getInstance(value, registerClasses))
+                return implementationClass.stream()
+                        .map(value -> getInstance(value, scannedClasses))
                         .collect(Collectors.toList());
-                components.forEach(component -> container.put(component.getClass(), component));
-                return components;
             }
-            T instance = getInstance(clazz, registerClasses);
-            container.put(instance.getClass(), instance);
+            T instance = getInstance(clazz, scannedClasses);
             return Collections.singletonList(instance);
         }
         throw new ContainerStartupException("Not found class with " + clazz.getName());
     }
 
-    private <T> T getInstance(Class<T> clazz, List<Class<?>> registerClasses) {
-        if (registerClasses.contains(clazz)) {
+    @SuppressWarnings("unchecked")
+    private <T> T getInstance(Class<T> clazz, List<Class<?>> scannedClasses) {
+        if (scannedClasses.contains(clazz)) {
+            Object instance = container.get(clazz);
+            if (Objects.nonNull(instance)) {
+                return (T) instance;
+            }
             throw new ContainerStartupException(CIRCULAR_REFERENCE);
         }
-        T instanceByInjectAnnotation = createInstance(clazz, registerClasses, constructorWithInjectAnnotationPredicate());
+        T instanceByInjectAnnotation = createInstance(clazz, scannedClasses, constructorWithInjectAnnotationPredicate());
         if (Objects.nonNull(instanceByInjectAnnotation)) {
             return instanceByInjectAnnotation;
         }
-        T instanceByNoArgs = createInstance(clazz, registerClasses, noArgsConstructorPredicate());
+        T instanceByNoArgs = createInstance(clazz, scannedClasses, noArgsConstructorPredicate());
         if (Objects.nonNull(instanceByNoArgs)) {
             return instanceByNoArgs;
         }
@@ -87,10 +89,10 @@ public class FushengContainer {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T createInstance(Class<T> clazz, List<Class<?>> registerClasses, Predicate<Constructor<?>> predicate) {
-        registerClasses.add(clazz);
+    private <T> T createInstance(Class<T> clazz, List<Class<?>> scannedClasses, Predicate<Constructor<?>> predicate) {
+        scannedClasses.add(clazz);
         Constructor<T>[] constructors = (Constructor<T>[]) clazz.getConstructors();
-        return Arrays.stream(constructors)
+        T instance = Arrays.stream(constructors)
                 .filter(predicate)
                 .map(constructor -> {
                     try {
@@ -100,7 +102,7 @@ public class FushengContainer {
                             }
                             return constructor.newInstance(Arrays.stream(constructor.getParameterTypes())
                                     .map(type -> {
-                                        List<?> components = getComponent(type, registerClasses);
+                                        List<?> components = getComponent(type, scannedClasses);
                                         if (Objects.equals(components.size(), 1)) {
                                             return components.get(0);
                                         }
@@ -124,6 +126,10 @@ public class FushengContainer {
                         return null;
                     }
                 }).findFirst().orElse(null);
+        if (Objects.nonNull(instance)) {
+            container.put(instance.getClass(), instance);
+        }
+        return instance;
     }
 
     private Predicate<Constructor<?>> constructorWithInjectAnnotationPredicate() {
